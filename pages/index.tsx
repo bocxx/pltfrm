@@ -1,25 +1,34 @@
-import { Box } from '@chakra-ui/react'
+import { Box, SimpleGrid } from '@chakra-ui/react'
+import { GetStaticProps } from 'next'
+import Post, { PostProps } from '../lib/components/Post'
+import prisma from '../lib/prisma'
 
-import CTASection from '../lib/components/samples/CTASection'
-import SomeImage from '../lib/components/samples/SomeImage'
-import SomeText from '../lib/components/samples/SomeText'
+export const getStaticProps: GetStaticProps = async () => {
+  const feed = await prisma.post.findMany({
+    where: { published: true },
+    include: {
+      author: {
+        select: { name: true },
+      },
+    },
+  })
+  return { props: { feed } }
+}
 
-const Home = () => {
+type Props = {
+  feed: PostProps[]
+}
+
+const Home: React.FC<Props> = (props) => {
   return (
-    <Box
-      display={{ md: 'flex' }}
-      alignItems='center'
-      minHeight='70vh'
-      gap={8}
-      mb={8}
-      w='full'
-    >
-      <SomeImage />
-
-      <Box>
-        <SomeText />
-        <CTASection />
-      </Box>
+    <Box>
+      <SimpleGrid minChildWidth='220px' spacing='40px'>
+        {props.feed.map((post) => (
+          <Box key={post.id} className='post'>
+            <Post post={post} />
+          </Box>
+        ))}
+      </SimpleGrid>
     </Box>
   )
 }
